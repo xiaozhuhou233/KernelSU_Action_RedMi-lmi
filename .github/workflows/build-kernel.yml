@@ -112,12 +112,46 @@ jobs:
     - name: Build kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        make -j$(nproc --all) O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} CC=clang ${{ env.BUILD_EXTRA_COMMAND }} ${{ env.KERNEL_DEFCONFIG }}
-        make -j$(nproc --all) O=out ARCH=${{ env.TARGET_ARCH }} ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} CC=clang ${{ env.BUILD_EXTRA_COMMAND }}
 
+        # 1. Generate base SM8150 config
+        make -j$(nproc --all) \
+          O=out \
+          ARCH=${{ env.TARGET_ARCH }} \
+          ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} \
+          CC=clang \
+          ${{ env.BUILD_EXTRA_COMMAND }} \
+          ${{ env.KERNEL_DEFCONFIG }}
+
+        # 2. Merge Xiaomi SM8150 common + Raphael configs
+        ./scripts/kconfig/merge_config.sh \
+          -m \
+          -O out \
+          out/.config \
+          arch/arm64/configs/vendor/xiaomi/sm8150-common.config \
+          arch/arm64/configs/vendor/xiaomi/raphael.config
+
+        # 3. Resolve config dependencies
+        make -j$(nproc --all) \
+          O=out \
+          ARCH=${{ env.TARGET_ARCH }} \
+          ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} \
+          CC=clang \
+          ${{ env.BUILD_EXTRA_COMMAND }} \
+          olddefconfig
+
+        # 4. Build kernel
+        make -j$(nproc --all) \
+          O=out \
+          ARCH=${{ env.TARGET_ARCH }} \
+          ${{ env.CUSTOM_CLANG_BUILD_COMMAND }} \
+          CC=clang \
+          ${{ env.BUILD_EXTRA_COMMAND }}
+
+          
     - name: Check a kernel output files
       run: |
        cd $GITHUB_WORKSPACE/kernel_workspace
