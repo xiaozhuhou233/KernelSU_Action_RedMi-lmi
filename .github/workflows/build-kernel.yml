@@ -74,12 +74,26 @@ jobs:
       if: env.USE_CUSTOM_CLANG == 'false'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        mkdir clang-aosp
-        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/${{ env.CLANG_BRANCH }}/clang-${{ env.CLANG_VERSION }}.tar.gz
-        tar -C clang-aosp/ -zxvf clang-${{ env.CLANG_VERSION }}.tar.gz
-        mkdir gcc-aosp
-        wget https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz
-        tar -C gcc-aosp/ -zxvf android-12.1.0_r27.tar.gz
+
+        echo "Downloading AOSP Clang ${{ env.CLANG_VERSION }}..."
+        git clone \
+          --depth=1 \
+          --branch ${{ env.CLANG_VERSION }} \
+          https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 \
+          clang-aosp
+
+        echo "Downloading AOSP GCC 4.9..."
+        git clone \
+          --depth=1 \
+          --branch android-12.1.0_r27 \
+          https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 \
+          gcc-aosp
+
+        echo "Clang version:"
+        clang-aosp/bin/clang --version
+
+        echo "GCC version:"
+        gcc-aosp/bin/aarch64-linux-android-gcc --version
 
     - name: Download Custom-Clang
       if: env.USE_CUSTOM_CLANG == 'true'
