@@ -75,15 +75,12 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
 
-        echo "Downloading AOSP Clang ${{ env.CLANG_VERSION }}..."
+        echo "Downloading AOSP Clang..."
         git clone \
           --depth=1 \
           --branch ${{ env.CLANG_BRANCH }} \
           https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 \
-          clang-repo
-
-        mv clang-repo/clang-${{ env.CLANG_VERSION }} clang-aosp
-        rm -rf clang-repo
+          clang-aosp
 
         echo "Downloading AOSP GCC 4.9..."
         git clone \
@@ -92,10 +89,14 @@ jobs:
           https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 \
           gcc-aosp
 
-        echo "Clang version:"
+        echo "Checking toolchains..."
+        ls -la clang-aosp/bin/clang
+        ls -la gcc-aosp/bin/aarch64-linux-android-gcc
+
+        echo "Clang:"
         clang-aosp/bin/clang --version
 
-        echo "GCC version:"
+        echo "GCC:"
         gcc-aosp/bin/aarch64-linux-android-gcc --version
 
     - name: Download Custom-Clang
