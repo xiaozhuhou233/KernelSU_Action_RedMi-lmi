@@ -78,9 +78,12 @@ jobs:
         echo "Downloading AOSP Clang ${{ env.CLANG_VERSION }}..."
         git clone \
           --depth=1 \
-          --branch ${{ env.CLANG_VERSION }} \
+          --branch ${{ env.CLANG_BRANCH }} \
           https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 \
-          clang-aosp
+          clang-repo
+
+        mv clang-repo/clang-${{ env.CLANG_VERSION }} clang-aosp
+        rm -rf clang-repo
 
         echo "Downloading AOSP GCC 4.9..."
         git clone \
