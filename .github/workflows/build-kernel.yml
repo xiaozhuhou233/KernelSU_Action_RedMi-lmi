@@ -75,14 +75,20 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
 
-        echo "Downloading AOSP Clang..."
+        echo "Downloading AOSP Clang r383902..."
+
         git clone \
           --depth=1 \
-          --branch ${{ env.CLANG_BRANCH }} \
+          --branch android-11.0.0_r1 \
           https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 \
-          clang-aosp
+          clang-repo
+
+        test -d clang-repo/clang-r383902
+        mv clang-repo/clang-r383902 clang-aosp
+        rm -rf clang-repo
 
         echo "Downloading AOSP GCC 4.9..."
+
         git clone \
           --depth=1 \
           --branch android-12.1.0_r27 \
@@ -90,26 +96,19 @@ jobs:
           gcc-aosp
 
         echo "Checking toolchains..."
-        ls -la clang-aosp/bin/clang
-        ls -la gcc-aosp/bin/aarch64-linux-android-gcc
+
+        test -x clang-aosp/bin/clang
+        test -x clang-aosp/bin/ld.lld
+        test -x gcc-aosp/bin/aarch64-linux-android-gcc
 
         echo "Clang:"
         clang-aosp/bin/clang --version
 
+        echo "LLD:"
+        clang-aosp/bin/ld.lld --version
+
         echo "GCC:"
         gcc-aosp/bin/aarch64-linux-android-gcc --version
-
-    - name: Download Custom-Clang
-      if: env.USE_CUSTOM_CLANG == 'true'
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace
-        if [[ ${{ env.CUSTOM_CLANG }} =~ github ]]; then
-            git clone ${{ env.CUSTOM_CLANG }} -b ${{ env.CUSTOM_CLANG_BRANCH }} clang-aosp
-        else
-            wget -O clang.zip ${{ env.CUSTOM_CLANG }}
-            mkdir clang-aosp
-            unzip clang.zip -d clang-aosp/
-        fi
 
     - name: Download mkbootimg tools
       if: env.MAKE_BOOT_IMAGE == 'true'
